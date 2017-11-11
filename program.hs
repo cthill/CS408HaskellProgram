@@ -13,9 +13,8 @@ median list = do
     let sorted = sort list
     let middle = div (length sorted) 2
 
-    if length sorted `mod` 2 == 0
-        then
-            mean ([sorted !! middle - 1, sorted !! middle])
+    if length sorted `mod` 2 == 0 then
+        mean ([sorted !! (middle - 1), sorted !! middle])
     else
         sorted !! middle
 
