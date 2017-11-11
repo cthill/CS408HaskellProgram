@@ -3,6 +3,8 @@ module Main where
 import Data.Ord
 import Data.List
 import Data.Map.Strict
+import System.IO
+import System.Environment
 
 
 mean list = do
@@ -13,9 +15,8 @@ median list = do
     let sorted = sort list
     let middle = div (length sorted) 2
 
-    if length sorted `mod` 2 == 0
-        then
-            mean ([sorted !! middle - 1, sorted !! middle])
+    if length sorted `mod` 2 == 0 then
+        mean ([sorted !! (middle - 1), sorted !! middle])
     else
         sorted !! middle
 
@@ -40,8 +41,39 @@ stdDev list = do
     let frac = numerator / fromIntegral(length list - 1)
     sqrt frac
 
+{-inputlist = do
+    putStrLn "Please enter some numbers separated by spaces."
+    putStr "> "
+    input <- getLine
+    return (Prelude.map (read::String->Float) (words input))-}
+
+choiceloop list = do
+    putStrLn ("Your numbers are " ++ (show list))
+    putStrLn "What would you like to do?"
+    putStrLn "mean, median, mode, stddev, quit?"
+    putStr "> "
+    hFlush stdout
+    choice <- getLine
+
+    let operate fn = do
+        putStr "= "
+        print (fn list)
+        putStrLn ""
+        choiceloop list
+
+    case choice of
+        "mean" -> operate mean
+        "median" -> operate median
+        "mode" -> operate mode
+        "stddev" -> operate stdDev
+        --"restart" -> putStrLn "" >> choiceloop inputlist
+        "quit" -> putStrLn "Great job!"
+        _ -> choiceloop list
+    putStr ""
+
 main = do
-    (print . mean) [1,2,3]
-    (print . median) [1,3,4,5]
-    (print . mode) [1,1,2,3]
-    (print . stdDev) [1,1,2,3]
+    args <- System.Environment.getArgs
+    if length args == 0 then
+        putStrLn "Please provide your numbers as cmd args"
+    else
+        choiceloop (Prelude.map (read::String->Float) args)
