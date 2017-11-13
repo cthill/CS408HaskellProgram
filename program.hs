@@ -63,6 +63,23 @@ mode list = do
     (fst . last) (mergeSortBy (comparing snd) (Data.Map.Strict.toList (freqmap list)))
 
 {-
+A group of functions to find the minimum or maximum value in the list.
+-}
+minmax :: (Ord a) => [a] -> (a -> a -> Bool) -> a
+minmax list compFunction = do
+    let winner x y = if compFunction x y then x else y
+    if (length list) == 1 then
+        (head list)
+    else
+        winner (head list) (minmax (tail list) compFunction)
+
+findLargest :: (Ord a) => [a] -> a
+findLargest list = minmax list (>)
+
+findSmallest :: (Ord a) => [a] -> a
+findSmallest list = minmax list (<)
+
+{-
 Compute the std. dev. of a list of Floating values.
 -}
 stdDev :: Floating a => [a] -> a
@@ -72,7 +89,6 @@ stdDev list = do
     let numerator = Prelude.foldr (+) 0 (Prelude.map xi list)
     let frac = numerator / fromIntegral(length list - 1)
     sqrt frac
-
 
 {-
 The first parameter for this function, '(a -> a -> Ordering)', is defined as a function
@@ -97,7 +113,7 @@ mergeSortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a]
 mergeSortBy orderFunc [] = []
 mergeSortBy orderFunc [a] = [a]
 mergeSortBy orderFunc list = do
-    let (left, right) = splitAt (div (length list) 2) list
+    let (left, right) = Data.List.splitAt (div (length list) 2) list
     merge orderFunc (mergeSortBy orderFunc left) (mergeSortBy orderFunc right)
 
 {-
@@ -114,11 +130,15 @@ choiceloop list = do
     --putStrLn (show (:t mean))
     putStrLn ("Your numbers are " ++ (show list))
     putStrLn "What would you like to do?"
-    putStrLn "sort, mean, median, mode, stddev, quit?"
+    putStrLn "sort, mean, median, mode, min, max, stddev, quit?"
     putStr "> "
     hFlush stdout
     choice <- getLine
 
+    {-
+    A helper function, since all of our interactive commands are the same except
+    the function they use, we can outsource the duplicate work here.
+    -}
     let operate fn = do
         putStr "= "
         print (fn list)
@@ -130,6 +150,8 @@ choiceloop list = do
         "mean" -> operate mean
         "median" -> operate median
         "mode" -> operate mode
+        "max" -> operate findLargest
+        "min" -> operate findSmallest
         "stddev" -> operate stdDev
         --"restart" -> putStrLn "" >> choiceloop inputlist
         "quit" -> putStrLn "Great job!"
@@ -141,6 +163,7 @@ main = do
     if length args == 0 then do
         putStrLn "Please enter some numbers separated by spaces."
         putStr "> "
+        hFlush stdout
         input <- getLine
         choiceloop (Prelude.map (read::String->Float) (words input))
     else
